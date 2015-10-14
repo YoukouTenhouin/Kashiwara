@@ -1,0 +1,11 @@
+#ifndef __IZUMO_MISC_CONSTANTS_H__
+#define __IZUMO_MISC_CONSTANTS_H__
+
+enum RETVAL {
+	IZM_OK = 0,
+	IZM_CONTINUE,
+	IZM_ERROR,
+	IZM_CHANGE
+};
+
+#endif	/* __IZUMO_MISC_CONSTANTS_H__ */
