@@ -249,10 +249,26 @@ main(int argc, char *argv[]) {
 	int port = 21021;
 	int workers = 5;
 
+    /*
 	if( argc >= 2 )
 		sscanf(argv[1], "%d", &port);
 	if( argc >= 3 )
 		sscanf(argv[2], "%d", &workers);
+        */
+    int opt;
+    while ((opt = getopt(argc, argv, "p:n:")) != -1) {
+        switch (opt) {
+            case 'p':
+                port = atoi(optarg);
+                break;
+            case 'n':
+                workers = atoi(optarg);
+                break;
+            default:
+                fprintf(stderr, "Usage: %s [-p port] [-n nworkers]\n", argv[0]);
+                exit(EXIT_FAILURE);
+        }
+    }
 
     __auto_type allocator = local_root_alloc_get_allocator();
     allocator->allocator_.closure_ = malloc;
