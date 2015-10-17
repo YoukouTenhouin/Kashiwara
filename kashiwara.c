@@ -18,7 +18,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <libp7.h>
+#include "./servcraft/p7/libp7.h"
+#include "./servcraft/p7/p7_root_alloc.h"
+#include "./servcraft/include/model_alloc.h"
 
 #define PATH = "./";
 
@@ -252,10 +254,24 @@ main(int argc, char *argv[]) {
 	if( argc >= 3 )
 		sscanf(argv[2], "%d", &workers);
 
+    __auto_type allocator = local_root_alloc_get_allocator();
+    allocator->allocator_.closure_ = malloc;
+    allocator->deallocator_.closure_ = free;
+    allocator->reallocator_.closure_ = realloc;
+
 	void mempool_init_local(void *unused) {
         izm_mempool_init(32, 8192); // XXX 20150718 Akvelog test
     }
-	p7_init(workers, mempool_init_local, NULL);
+    void spinlock_init_local(void *unused) {
+        p7_spinlock_tlinit((void *) 64); // XXX 20151017 Akvelog test
+    }
+    void kashiwara_init_local(void *unused) {
+        mempool_init_local(NULL);
+        spinlock_init_local(NULL);
+    }
+	//p7_init(workers, mempool_init_local, NULL);
+    p7_init(workers, kashiwara_init_local, NULL);
+    p7_spinlock_preinit(64); // XXX 20151017 Akvelog test
 
 	struct sockaddr_in serv_addr;	
 	
