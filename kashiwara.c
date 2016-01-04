@@ -18,9 +18,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "./servcraft/p7/libp7.h"
-#include "./servcraft/p7/p7_root_alloc.h"
-#include "./servcraft/include/model_alloc.h"
+#include "../servcraft/p7/libp7.h"
+#include "../servcraft/p7/p7_root_alloc.h"
+#include "../servcraft/include/model_alloc.h"
 
 #define PATH = "./";
 
@@ -270,7 +270,7 @@ main(int argc, char *argv[]) {
         }
     }
 
-    __auto_type allocator = local_root_alloc_get_allocator();
+    __auto_type allocator = p7_root_alloc_get_allocator();
     allocator->allocator_.closure_ = malloc;
     allocator->deallocator_.closure_ = free;
     allocator->reallocator_.closure_ = realloc;
@@ -311,7 +311,7 @@ main(int argc, char *argv[]) {
 		abort();
 	}
 	
-	listen(listen_sock, 128);
+	listen(listen_sock, 32);
 
 	while(1) {
 		struct sockaddr_in cli_addr;
