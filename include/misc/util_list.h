@@ -1,7 +1,7 @@
 // using GCC extensions
 
-#ifndef        _UTIL_LIST_H_
-#define        _UTIL_LIST_H_
+#ifndef        UTIL_LIST_H_
+#define        UTIL_LIST_H_
 
 #include    <stddef.h>
 
@@ -68,4 +68,4 @@ static inline int list_is_empty(list_ctl_t *h) {
     for (pos = (head)->next; \
         ((tmp = pos) != (head)) && (pos = pos->next);)
 
-#endif        // _UTIL_LIST_H_
+#endif        // UTIL_LIST_H_
