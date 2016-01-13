@@ -345,6 +345,7 @@ main(int argc, char *argv[]) {
 			cli_addr_queue_curr = cli_addr_queue;
 			bzero(cli_addr_queue, sizeof(cli_addr_queue));
 			coro_create_flag = 0;
+			p7_coro_yield();
 		}
 		
 	do_multi_accept:
