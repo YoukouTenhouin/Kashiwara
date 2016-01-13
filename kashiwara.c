@@ -286,8 +286,15 @@ main(int argc, char *argv[]) {
         spinlock_init_local(NULL);
     }
 	//p7_init(workers, mempool_init_local, NULL);
-    p7_init(workers, kashiwara_init_local, NULL);
-    p7_spinlock_preinit(64); // XXX 20151017 Akvelog test
+    //p7_preinit_namespace_size(1024);
+    //p7_init(workers, kashiwara_init_local, NULL);
+    //p7_spinlock_preinit(64); // XXX 20151017 Akvelog test
+    struct p7_init_config config;
+    config.namespace_config.namespace_size = 1024;
+    config.pthread_config.nthreads = workers;
+    config.pthread_config.at_startup = kashiwara_init_local;
+    config.pthread_config.arg_startup = NULL;
+    p7_init(config);
 
 	struct sockaddr_in serv_addr;	
 	
