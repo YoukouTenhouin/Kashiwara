@@ -321,38 +321,57 @@ main(int argc, char *argv[]) {
 	
 	listen(listen_sock, 32);
 
-    int multi_accept_flag = 1;
+	int multi_accept_flag = 1;
+	int coro_create_flag = 0;
+	int cli_sock_queue[4096], *cli_sock_queue_curr = cli_sock_queue;
+	struct sockaddr_in cli_addr_queue[4096], *cli_addr_queue_curr = cli_addr_queue;
+	bzero(cli_addr_queue, sizeof(cli_addr_queue));
 	while(1) {
-		struct sockaddr_in cli_addr;
-		bzero(&cli_addr, sizeof(cli_addr));
-		unsigned int caddrlen;										
+		int cli_sock;
+		unsigned int caddrlen;
 		//int cli_sock = p7_iowrap(accept, P7_IOMODE_READ, listen_sock, (struct sockaddr*)&cli_addr, &caddrlen);
-        int cli_sock;
-do_multi_accept:
-        if (multi_accept_flag)
-            cli_sock = accept(listen_sock, (struct sockaddr *) &cli_addr, &caddrlen);
-        else {
-            p7_io_notify(listen_sock, P7_IOMODE_READ);
-            multi_accept_flag = 1;
-            goto do_multi_accept;
-        }
-		if (cli_sock < 0) {
-            int errsv = errno;
-            if (errsv == EINTR)
-                continue;
-            if ((errsv == EAGAIN) || (errsv == EWOULDBLOCK)) {
-                multi_accept_flag = 0;
-                continue;
-            } else {
-                perror("accept");
-                abort();
-            }
+
+		if(coro_create_flag) {
+			int *cli_sock_i = cli_sock_queue;
+			struct sockaddr_in *cli_addr_i = cli_addr_queue;
+			for (; cli_sock_i != cli_sock_queue_curr && cli_addr_i != cli_addr_queue_curr;
+			     ++cli_sock_i, ++cli_addr_i) {
+				struct client *c = malloc(sizeof(struct client));
+				c->sock = *cli_sock_i;
+				c->addr = *cli_addr_i;				
+				p7_coro_create(handle_client, c, 4096);
+			}
+			cli_sock_queue_curr = cli_sock_queue;
+			cli_addr_queue_curr = cli_addr_queue;
+			bzero(cli_addr_queue, sizeof(cli_addr_queue));
+			coro_create_flag = 0;
 		}
 		
-		struct client *c = malloc(sizeof(struct client));
-		c->sock = cli_sock;
-		c->addr = cli_addr;
-
-		p7_coro_create(handle_client, c, 4096);
+	do_multi_accept:
+		if (multi_accept_flag) {
+			cli_sock = accept(listen_sock, (struct sockaddr *) cli_addr_queue_curr++, &caddrlen);
+		} else {
+			p7_io_notify(listen_sock, P7_IOMODE_READ | P7_IOCTL_ET);
+			multi_accept_flag = 1;
+			goto do_multi_accept;
+		}
+		if (cli_sock < 0) {
+			int errsv = errno;
+			if (errsv == EINTR)
+				continue;
+			if ((errsv == EAGAIN) || (errsv == EWOULDBLOCK)) {
+				multi_accept_flag = 0;
+				coro_create_flag = 1;
+				continue;
+			} else {
+				perror("accept");
+				abort();
+			}
+		} else {
+			*cli_sock_queue_curr++ = cli_sock;
+			if (cli_sock_queue_curr - cli_sock_queue >= 4096) {
+				coro_create_flag = 1;
+			}
+		}
 	}
 }
