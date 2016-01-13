@@ -306,6 +306,7 @@ main(int argc, char *argv[]) {
 
 	int optval = 1;
 	setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &optval, sizeof(optval));
+    fcntl(listen_sock, F_SETFL, fcntl(listen_sock, F_GETFL)|O_NONBLOCK);
 	
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(port);
@@ -320,15 +321,32 @@ main(int argc, char *argv[]) {
 	
 	listen(listen_sock, 32);
 
+    int multi_accept_flag = 1;
 	while(1) {
 		struct sockaddr_in cli_addr;
 		bzero(&cli_addr, sizeof(cli_addr));
 		unsigned int caddrlen;										
-		int cli_sock = p7_iowrap(accept, P7_IOMODE_READ, listen_sock, (struct sockaddr*)&cli_addr, &caddrlen);
-		
+		//int cli_sock = p7_iowrap(accept, P7_IOMODE_READ, listen_sock, (struct sockaddr*)&cli_addr, &caddrlen);
+        int cli_sock;
+do_multi_accept:
+        if (multi_accept_flag)
+            cli_sock = accept(listen_sock, (struct sockaddr *) &cli_addr, &caddrlen);
+        else {
+            p7_io_notify(listen_sock, P7_IOMODE_READ);
+            multi_accept_flag = 1;
+            goto do_multi_accept;
+        }
 		if (cli_sock < 0) {
-			perror("accept");
-			abort();
+            int errsv = errno;
+            if (errsv == EINTR)
+                continue;
+            if ((errsv == EAGAIN) || (errsv == EWOULDBLOCK)) {
+                multi_accept_flag = 0;
+                continue;
+            } else {
+                perror("accept");
+                abort();
+            }
 		}
 		
 		struct client *c = malloc(sizeof(struct client));
