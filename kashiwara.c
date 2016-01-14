@@ -352,7 +352,7 @@ main(int argc, char *argv[]) {
 		if (multi_accept_flag) {
 			cli_sock = accept(listen_sock, (struct sockaddr *) cli_addr_queue_curr++, &caddrlen);
 		} else {
-			p7_io_notify(listen_sock, P7_IOMODE_READ | P7_IOCTL_ET);
+			p7_io_notify(listen_sock, P7_IOMODE_READ);
 			multi_accept_flag = 1;
 			goto do_multi_accept;
 		}
