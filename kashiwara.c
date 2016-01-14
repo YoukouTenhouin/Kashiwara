@@ -339,7 +339,7 @@ main(int argc, char *argv[]) {
 				struct client *c = malloc(sizeof(struct client));
 				c->sock = *cli_sock_i;
 				c->addr = *cli_addr_i;				
-				p7_coro_create(handle_client, c, 4096);
+				p7_coro_create_async(handle_client, c, 4096);
 			}
 			cli_sock_queue_curr = cli_sock_queue;
 			cli_addr_queue_curr = cli_addr_queue;
