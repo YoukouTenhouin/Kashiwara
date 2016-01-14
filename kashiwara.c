@@ -244,10 +244,18 @@ _EXIT_ERROR:
 	return;	
 }
 
+volatile uint64_t n_accept_count = 0;
+
+void sigint_handler(int unused) {
+    printf("Total: %lu clients handled\n", n_accept_count);
+    exit(0);
+}
+
 int
 main(int argc, char *argv[]) {
 	int port = 21021;
 	int workers = 5;
+    signal(SIGINT, sigint_handler);
 
     /*
 	if( argc >= 2 )
@@ -336,6 +344,7 @@ main(int argc, char *argv[]) {
             c->sock = cli_sock;
             c->addr = cli_addr;
             p7_coro_create_async(handle_client, c, 4096);
+            n_accept_count++;
         }
         //p7_coro_yield();
         p7_io_notify(listen_sock, P7_IOMODE_READ);
