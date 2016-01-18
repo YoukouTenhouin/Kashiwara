@@ -299,6 +299,8 @@ main(int argc, char *argv[]) {
     //p7_spinlock_preinit(64); // XXX 20151017 Akvelog test
     struct p7_init_config config;
     config.namespace_config.namespace_size = 1024;
+    config.namespace_config.rwlock_granularity = 10;
+    config.namespace_config.spintime = 400;
     config.pthread_config.nthreads = workers;
     config.pthread_config.at_startup = kashiwara_init_local;
     config.pthread_config.arg_startup = NULL;
