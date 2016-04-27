@@ -145,9 +145,17 @@ create_body(char *out, struct izm_http_request *req) {
 	return input - out;
 }
 
+static
+void
+test_coro_go_die_handler(void *self, void *arg) {
+    printf("SIG-GO-DIE\n");
+}
+
 void
 handle_client(void *_c)
 {
+    p7_coro_set_cleanup(test_coro_go_die_handler, NULL);
+
 	struct client *c = (struct client*)_c;
 	int ret;
 	int code;
@@ -330,6 +338,8 @@ main(int argc, char *argv[]) {
 	}
 	
 	listen(listen_sock, 32);
+
+    atexit(p7_finalize);
 
 	int multi_accept_flag = 1;
 	int coro_create_flag = 0;
